@@ -1,2 +1,3 @@
-# Local configuration containing credentials
-config.js
+# System files
+.DS_Store
+Thumbs.db

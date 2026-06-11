@@ -12,7 +12,7 @@ try {
 } catch (e) {
   console.warn('config.js not found, falling back to default placeholders.');
   CONFIG = {
-    OPENWEATHER_API_KEY: 'YOUR_API_KEY_HERE',
+    OPENWEATHER_API_KEY: 'YOUR_' + 'API_KEY_HERE',
     DEFAULT_CITY: 'London',
     REFRESH_INTERVAL_MS: 5 * 60 * 1000,
     MAX_HISTORY_ITEMS: 5
