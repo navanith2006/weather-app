@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Get live weather forecasts, current conditions, 5-day forecasts, and climate tips for your city. Sleek design with real-time updates.">
+  <meta name="theme-color" content="#0b132b">
+  
+  <title>Skyflow Weather | Live Atmospheric Tracker</title>
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Dynamic Ambient Weather Backgrounds -->
+  <div class="ambient-overlay">
+    <div class="sun-overlay"></div>
+    <div class="rain-overlay" id="rainOverlay"></div>
+    <div class="snow-overlay" id="snowOverlay"></div>
+    <div class="lightning-flash"></div>
+    <div class="clouds-overlay" id="cloudsOverlay"></div>
+  </div>
+
+  <!-- Main Weather Container -->
+  <main class="weather-container">
+    
+    <!-- Top Header & Search Bar -->
+    <header>
+      <div class="brand">
+        <i data-lucide="cloud-sun" class="brand-icon"></i>
+        <h1>Skyflow</h1>
+      </div>
+      
+      <!-- Search Input Container -->
+      <div class="search-container">
+        <form class="search-form" id="searchForm">
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search city..." 
+            class="search-input" 
+            autocomplete="off"
+            aria-label="Search city weather"
+          >
+          <button type="submit" class="search-btn" aria-label="Submit search">
+            <i data-lucide="search"></i>
+          </button>
+        </form>
+        
+        <!-- Search History Dropdown -->
+        <div class="history-dropdown" id="historyDropdown">
+          <div class="history-header">
+            <span>Recent Searches</span>
+            <button class="clear-history-btn" id="clearHistoryBtn">Clear All</button>
+          </div>
+          <div id="historyList">
+            <!-- Dynamically populated history items -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Global Controls -->
+      <div class="controls-group">
+        <button class="geo-btn" id="geoBtn" title="Auto-detect current location" aria-label="Use my current location">
+          <i data-lucide="map-pin"></i>
+        </button>
+        <button class="toggle-btn" id="unitBtn" title="Toggle °C / °F" aria-label="Toggle temperature unit">
+          <i data-lucide="thermometer"></i>
+          <span id="unitBtnText">Metric</span>
+        </button>
+        <button class="toggle-btn" id="themeBtn" title="Toggle Dark/Light Mode" aria-label="Toggle light dark theme">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Weather Dashboard Grid -->
+    <section class="weather-grid" id="weatherDashboard">
+      
+      <!-- Left Column: Current Weather Card -->
+      <article class="current-card glass-card">
+        <!-- Date / Time -->
+        <div class="time-badge" id="currentTime">Loading time...</div>
+        
+        <!-- Location -->
+        <div class="location-info">
+          <h2 class="city-name" id="cityName">London</h2>
+          <span class="country-name" id="countryName">GB</span>
+        </div>
+        
+        <!-- Icon & Illustration -->
+        <div class="weather-illustration" id="illustrationWrapper">
+          <img src="assets/weather-icons/clear-day.svg" id="weatherIcon" alt="Clear Sky Icon">
+        </div>
+        
+        <!-- Temp and Condition -->
+        <div class="temp-display">
+          <span class="temperature" id="tempValue">--</span>
+          <span class="temp-unit" id="tempUnitLabel">°C</span>
+        </div>
+        <div class="condition-text" id="weatherCondition">--</div>
+        
+        <!-- Dynamic Weather Tip -->
+        <div class="weather-tip-box">
+          <div class="weather-tip-title">
+            <i data-lucide="sparkles" class="weather-tip-icon"></i>
+            <span>Daily Recommendation</span>
+          </div>
+          <p class="weather-tip-text" id="weatherTipText">Searching for recommendations...</p>
+        </div>
+      </article>
+
+      <!-- Right Column: Details & Forecast -->
+      <div class="dashboard-details">
+        
+        <!-- Detailed Parameters Grid -->
+        <div class="details-grid">
+          
+          <!-- Feels Like -->
+          <div class="detail-card glass-card">
+            <div class="detail-header">
+              <span class="detail-title">Feels Like</span>
+              <i data-lucide="thermometer-sun" class="detail-icon"></i>
+            </div>
+            <div class="detail-value" id="feelsLikeValue">--°</div>
+            <span class="detail-subtext" id="feelsLikeSubtext">Adjusted temp</span>
+          </div>
+
+          <!-- Humidity -->
+          <div class="detail-card glass-card">
+            <div class="detail-header">
+              <span class="detail-title">Humidity</span>
+              <i data-lucide="droplet" class="detail-icon"></i>
+            </div>
+            <div class="detail-value" id="humidityValue">--%</div>
+            <span class="detail-subtext" id="humiditySubtext">Moisture level</span>
+          </div>
+
+          <!-- Wind Speed -->
+          <div class="detail-card glass-card">
+            <div class="detail-header">
+              <span class="detail-title">Wind</span>
+              <i data-lucide="wind" class="detail-icon"></i>
+            </div>
+            <div class="detail-value" id="windValue">--</div>
+            <span class="detail-subtext" id="windSubtext">Velocity & angle</span>
+          </div>
+
+          <!-- Barometric Pressure -->
+          <div class="detail-card glass-card">
+            <div class="detail-header">
+              <span class="detail-title">Pressure</span>
+              <i data-lucide="compass" class="detail-icon"></i>
+            </div>
+            <div class="detail-value" id="pressureValue">-- hPa</div>
+            <span class="detail-subtext" id="pressureSubtext">Atmospheric force</span>
+          </div>
+
+          <!-- Visibility -->
+          <div class="detail-card glass-card">
+            <div class="detail-header">
+              <span class="detail-title">Visibility</span>
+              <i data-lucide="eye" class="detail-icon"></i>
+            </div>
+            <div class="detail-value" id="visibilityValue">--</div>
+            <span class="detail-subtext" id="visibilitySubtext">Range clear</span>
+          </div>
+
+          <!-- Solar Cycle (Sunrise / Sunset) -->
+          <div class="detail-card glass-card">
+            <div class="detail-header">
+              <span class="detail-title">Solar Cycle</span>
+              <i data-lucide="sunset" class="detail-icon"></i>
+            </div>
+            <div class="detail-value" id="sunCycleValue">--</div>
+            <span class="detail-subtext" id="sunCycleSubtext">Sunrise & Sunset</span>
+          </div>
+          
+        </div>
+
+        <!-- 5-Day Forecast Grid Section -->
+        <article class="forecast-section">
+          <h3 class="section-title">
+            <i data-lucide="calendar-days"></i>
+            <span>5-Day Outlook</span>
+          </h3>
+          <div class="forecast-grid" id="forecastGrid">
+            <!-- Forecast Day Cards dynamically injected here -->
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>Skyflow Weather &copy; 2026. Made with ❤️ using OpenWeather API. Design by Antigravity.</p>
+    </footer>
+  </main>
+
+  <!-- Loader Backdrop -->
+  <div class="loading-overlay" id="loadingOverlay" role="dialog" aria-modal="true" aria-label="Loading weather data">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div class="toast-container" id="toastContainer" aria-live="assertive"></div>
+
+  <!-- Core Javascript File -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>

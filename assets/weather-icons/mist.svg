@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%">
+  <defs>
+    <linearGradient id="mist-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E2E8F0" stop-opacity="0.1" />
+      <stop offset="50%" stop-color="#CBD5E1" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#94A3B8" stop-opacity="0.1" />
+    </linearGradient>
+  </defs>
+  <g stroke="url(#mist-grad)" stroke-width="4" stroke-linecap="round" fill="none">
+    <path class="mist mist-1" d="M12 24 C 20 21, 28 27, 36 24 C 44 21, 52 24, 52 24" />
+    <path class="mist mist-2" d="M8 32 C 16 29, 24 35, 32 32 C 40 29, 48 32, 56 32" />
+    <path class="mist mist-3" d="M14 40 C 22 37, 30 43, 38 40 C 46 37, 50 40, 50 40" />
+  </g>
+  <style>
+    .mist {
+      animation: shift-mist 4s ease-in-out infinite;
+    }
+    .mist-1 { animation-delay: 0s; }
+    .mist-2 { animation-delay: 1.2s; }
+    .mist-3 { animation-delay: 2.4s; }
+    @keyframes shift-mist {
+      0%, 100% { transform: translateX(0px); }
+      50% { transform: translateX(4px); }
+    }
+  </style>
+</svg>
