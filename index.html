@@ -75,6 +75,9 @@
         <button class="toggle-btn" id="themeBtn" title="Toggle Dark/Light Mode" aria-label="Toggle light dark theme">
           <i data-lucide="moon" id="themeIcon"></i>
         </button>
+        <button class="toggle-btn" id="settingsBtn" title="Configure API Key" aria-label="Configure API Key">
+          <i data-lucide="key"></i>
+        </button>
       </div>
     </header>
 
@@ -201,6 +204,35 @@
       <p>Skyflow Weather &copy; 2026. Made with ❤️ using OpenWeather API. Design by Antigravity.</p>
     </footer>
   </main>
+
+  <!-- API Settings Modal -->
+  <div class="loading-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-label="API Settings">
+    <div class="glass-card" style="padding: 2.25rem 2rem; max-width: 440px; width: calc(100% - 2rem); display: flex; flex-direction: column; gap: 1.25rem; position: relative; text-align: left;">
+      <button id="closeSettingsBtn" style="position: absolute; top: 1.25rem; right: 1.25rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0.25rem; border-radius: 50%;" aria-label="Close modal">
+        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+      </button>
+      <h3 style="display: flex; align-items: center; gap: 0.6rem; font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">
+        <i data-lucide="key" style="color: var(--accent-primary); width: 22px; height: 22px;"></i>
+        <span>API Key Required</span>
+      </h3>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+        To fetch live weather data, this app requires an <strong>OpenWeatherMap API Key</strong>. Please paste your key below:
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 0.6rem; position: relative;">
+        <input 
+          type="password" 
+          id="apiKeyInput" 
+          placeholder="Paste API Key (32 hex characters)" 
+          class="search-input" 
+          style="padding: 0.9rem 1.25rem; font-size: 0.95rem; width: 100%; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-primary);"
+        >
+        <a href="https://openweathermap.org/" target="_blank" style="font-size: 0.8rem; color: var(--accent-primary); text-decoration: none; align-self: flex-end; font-weight: 600;">Get a free API Key →</a>
+      </div>
+      <button id="saveKeyBtn" class="toggle-btn" style="background: var(--accent-primary); color: white; border: none; justify-content: center; width: 100%; padding: 0.9rem 1.5rem; font-weight: 600; border-radius: 12px; cursor: pointer; transition: background 0.2s;">
+        Save Key & Connect
+      </button>
+    </div>
+  </div>
 
   <!-- Loader Backdrop -->
   <div class="loading-overlay" id="loadingOverlay" role="dialog" aria-modal="true" aria-label="Loading weather data">

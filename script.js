@@ -4,7 +4,20 @@
  * geolocation auto-detection, responsive UI rendering, and weather background animations.
  */
 
-import CONFIG from './config.js';
+// Load config dynamically (handles missing config.js on GitHub Pages)
+let CONFIG;
+try {
+  const configModule = await import('./config.js');
+  CONFIG = configModule.default;
+} catch (e) {
+  console.warn('config.js not found, falling back to default placeholders.');
+  CONFIG = {
+    OPENWEATHER_API_KEY: 'YOUR_API_KEY_HERE',
+    DEFAULT_CITY: 'London',
+    REFRESH_INTERVAL_MS: 5 * 60 * 1000,
+    MAX_HISTORY_ITEMS: 5
+  };
+}
 
 // ==========================================================================
 // Application State
@@ -34,6 +47,11 @@ const DOM = {
   unitBtnText: document.getElementById('unitBtnText'),
   themeBtn: document.getElementById('themeBtn'),
   themeIcon: document.getElementById('themeIcon'),
+  settingsBtn: document.getElementById('settingsBtn'),
+  settingsModal: document.getElementById('settingsModal'),
+  closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+  saveKeyBtn: document.getElementById('saveKeyBtn'),
+  apiKeyInput: document.getElementById('apiKeyInput'),
   
   // Current Weather Cards
   currentTime: document.getElementById('currentTime'),
@@ -78,11 +96,14 @@ function init() {
   updateUnitToggleUI();
   renderHistoryList();
   
-  // Try fetching the initial city
-  fetchWeather(state.city);
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    openSettingsModal(true);
+  } else {
+    // Try fetching the initial city
+    fetchWeather(state.city);
+  }
   
-  // If first time and browser allows geolocation, gently prompt (optional, done via geoBtn click, 
-  // but we auto-load the stored/default city first to make it fast).
   setupAutoRefresh();
 }
 
@@ -90,6 +111,9 @@ function init() {
 function setupAutoRefresh() {
   if (state.refreshTimer) clearInterval(state.refreshTimer);
   state.refreshTimer = setInterval(() => {
+    const apiKey = getApiKey();
+    if (!apiKey) return;
+    
     showToast('Refreshing weather data...', 'success');
     if (state.coords) {
       fetchWeatherByCoords(state.coords.lat, state.coords.lon);
@@ -97,6 +121,36 @@ function setupAutoRefresh() {
       fetchWeather(state.city);
     }
   }, CONFIG.REFRESH_INTERVAL_MS);
+}
+
+// Resolve the API Key from localStorage or configuration
+function getApiKey() {
+  const localKey = localStorage.getItem('skyflow_api_key');
+  if (localKey && localKey.trim() !== '') {
+    return localKey.trim();
+  }
+  if (CONFIG.OPENWEATHER_API_KEY && CONFIG.OPENWEATHER_API_KEY !== 'YOUR_API_KEY_HERE') {
+    return CONFIG.OPENWEATHER_API_KEY;
+  }
+  return null;
+}
+
+// Open/Close the API configuration modal
+function openSettingsModal(forcePrompt = false) {
+  DOM.settingsModal.classList.add('active');
+  const activeKey = localStorage.getItem('skyflow_api_key') || (CONFIG.OPENWEATHER_API_KEY !== 'YOUR_API_KEY_HERE' ? CONFIG.OPENWEATHER_API_KEY : '');
+  DOM.apiKeyInput.value = activeKey;
+  
+  // If forced (no key present at startup), hide close button to mandate key input
+  if (forcePrompt) {
+    DOM.closeSettingsBtn.style.display = 'none';
+  } else {
+    DOM.closeSettingsBtn.style.display = 'flex';
+  }
+}
+
+function closeSettingsModal() {
+  DOM.settingsModal.classList.remove('active');
 }
 
 // ==========================================================================
@@ -165,6 +219,37 @@ function setupEventListeners() {
     localStorage.setItem('skyflow_theme', newTheme);
     applyTheme(newTheme);
   });
+
+  // API Key Settings Modal toggles
+  DOM.settingsBtn.addEventListener('click', () => {
+    openSettingsModal(false);
+  });
+
+  DOM.closeSettingsBtn.addEventListener('click', () => {
+    closeSettingsModal();
+  });
+
+  DOM.saveKeyBtn.addEventListener('click', () => {
+    const keyVal = DOM.apiKeyInput.value.trim();
+    if (keyVal === '') {
+      localStorage.removeItem('skyflow_api_key');
+      showToast('API Key cleared. Using default configuration.', 'success');
+    } else if (keyVal.length !== 32) {
+      showToast('Invalid key length! OpenWeather API keys must be 32 characters long.', 'danger');
+      return;
+    } else {
+      localStorage.setItem('skyflow_api_key', keyVal);
+      showToast('API Key saved successfully!', 'success');
+    }
+    
+    closeSettingsModal();
+    // Trigger fresh data fetch
+    if (state.coords) {
+      fetchWeatherByCoords(state.coords.lat, state.coords.lon);
+    } else {
+      fetchWeather(state.city);
+    }
+  });
 }
 
 // ==========================================================================
@@ -173,8 +258,10 @@ function setupEventListeners() {
 
 // Main fetch logic by City Name
 async function fetchWeather(cityName) {
-  if (CONFIG.OPENWEATHER_API_KEY === 'YOUR_API_KEY_HERE') {
-    showToast('API Key is missing! Please configure config.js', 'danger');
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    openSettingsModal(true);
+    showToast('API Key is missing! Please configure it in Settings.', 'danger');
     return;
   }
 
@@ -182,14 +269,14 @@ async function fetchWeather(cityName) {
   try {
     const encodedCity = encodeURIComponent(cityName);
     // Fetch Current Weather
-    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodedCity}&units=${state.units}&appid=${CONFIG.OPENWEATHER_API_KEY}`;
+    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodedCity}&units=${state.units}&appid=${apiKey}`;
     const weatherRes = await fetch(weatherUrl);
     
     if (!weatherRes.ok) {
       if (weatherRes.status === 404) {
         throw new Error(`City "${cityName}" not found.`);
       } else if (weatherRes.status === 401) {
-        throw new Error("Invalid API key. Please check config.js.");
+        throw new Error("Invalid API key. Please check settings.");
       } else {
         throw new Error("Failed to fetch current weather data.");
       }
@@ -198,7 +285,7 @@ async function fetchWeather(cityName) {
     const weatherData = await weatherRes.json();
 
     // Fetch Forecast Weather
-    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodedCity}&units=${state.units}&appid=${CONFIG.OPENWEATHER_API_KEY}`;
+    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodedCity}&units=${state.units}&appid=${apiKey}`;
     const forecastRes = await fetch(forecastUrl);
     
     if (!forecastRes.ok) {
@@ -227,15 +314,17 @@ async function fetchWeather(cityName) {
 
 // Fetch logic by Coordinates (Geolocation)
 async function fetchWeatherByCoords(lat, lon) {
-  if (CONFIG.OPENWEATHER_API_KEY === 'YOUR_API_KEY_HERE') {
-    showToast('API Key is missing! Please configure config.js', 'danger');
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    openSettingsModal(true);
+    showToast('API Key is missing! Please configure it in Settings.', 'danger');
     return;
   }
 
   showLoader(true);
   try {
     // Current Weather Coords API
-    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${state.units}&appid=${CONFIG.OPENWEATHER_API_KEY}`;
+    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${state.units}&appid=${apiKey}`;
     const weatherRes = await fetch(weatherUrl);
     
     if (!weatherRes.ok) {
@@ -244,7 +333,7 @@ async function fetchWeatherByCoords(lat, lon) {
     const weatherData = await weatherRes.json();
 
     // Forecast Coords API
-    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${state.units}&appid=${CONFIG.OPENWEATHER_API_KEY}`;
+    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${state.units}&appid=${apiKey}`;
     const forecastRes = await fetch(forecastUrl);
     
     if (!forecastRes.ok) {
